@@ -19,6 +19,27 @@ Les caracteristiques de visage extraites sont :
     ** face_conf : Float, Confidence score (0-100) of the face detection.
 '''
 
+######################################################
+## La sortie sera un dictionnaire de cette format : ##
+## {                                                ##
+##    'face_present': 1,                            ##
+##    'no_of_face': 1,                              ##
+##    'face_x': 100.0,                              ##
+##    'face_y': 150.0,                              ##
+##    'face_w': 200.0,                              ##
+##    'face_h': 200.0,                              ##
+##    'left_eye_x': 140.0,                          ##
+##    'left_eye_y': 200.0,                          ##
+##    'right_eye_x': 220.0,                         ##
+##    'right_eye_y': 200.0,                         ##
+##    'nose_tip_x': 180.0,                          ##
+##    'nose_tip_y': 250.0,                          ##
+##    'mouth_x': 180.0,                             ##
+##    'mouth_y': 300.0,                             ##
+##    'face_conf': 95.0                             ##
+## }                                                ##
+######################################################
+
 class FaceDetectionExtractor:
     def __init__(self):
         pass
