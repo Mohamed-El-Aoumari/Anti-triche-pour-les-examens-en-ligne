@@ -5,7 +5,6 @@
 ##               OpenCV et NumPy.                     ##
 ########################################################
 
-
 '''
 Les caracteristiques de la tete extraites sont :
     ** head_pose : Categorical: 'forward', 'down', 'left', 'right', 'None'
@@ -13,6 +12,16 @@ Les caracteristiques de la tete extraites sont :
     ** head_roll : Float, Head rotation around the Z-axis (tilt left/right).
     ** head_yaw : Float, Head rotation around the Y-axis (left/right turn).
 '''
+
+########################################################
+## La sortie sera un dictionnaire de cette format :   ##
+## {                                                  ##
+##    'head_pose': 'forward',                         ##
+##    'head_pitch': 10.5,                             ##
+##    'head_roll': -5.2,                              ##
+##    'head_yaw': 15.0                                ##
+## }                                                  ##
+########################################################
 
 class HeadPositionExtractor:
     def __init__(self):

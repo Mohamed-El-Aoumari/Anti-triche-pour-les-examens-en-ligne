@@ -14,6 +14,20 @@ Les caracteristiques du regard des yeux extraites sont :
     ** pupil_right_x, pupil_right_y : Float, X, Y coordinates of the right pupil.
 '''
 
+######################################################
+## La sortie sera un dictionnaire de cette format : ##
+## {                                                ##
+##    'gaze_on_script': 1,                          ##
+##    'gaze_direction': 'center',                   ##
+##    'gazePoint_x': 400.0,                         ##
+##    'gazePoint_y': 300.0,                         ##
+##    'pupil_left_x': 180.0,                        ##
+##    'pupil_left_y': 220.0,                        ##
+##    'pupil_right_x': 220.0,                       ##
+##    'pupil_right_y': 220.0                        ##
+## }                                                ##
+######################################################
+
 class EyeGazeExtractor:
     def __init__(self):
         pass
