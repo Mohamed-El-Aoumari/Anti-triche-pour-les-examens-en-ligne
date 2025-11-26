@@ -3,6 +3,7 @@
 ## extraire les caracteristiques de visage a partir ##
 ## des images en utilisant MediaPipe Face Detection ## 
 ##                et OpenCV.                        ##
+##
 ######################################################
 
 ''' 
