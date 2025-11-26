@@ -6,7 +6,7 @@
 ######################################################
 
 ''' 
-les caracteristiques de visage extraites sont :
+Les caracteristiques de visage extraites sont :
     ** face_present : Integer (Binary) Indicator: 1 if a face is detected, 0 otherwise. 0, 1
     ** no_of_face : Integer, Number of faces detected in the frame.
     ** face_x, face_y : Float, Coordinates of the top-left corner of the detected face bounding box.
@@ -18,3 +18,9 @@ les caracteristiques de visage extraites sont :
     ** face_conf : Float, Confidence score (0-100) of the face detection.
 '''
 
+class FaceDetectionExtractor:
+    def __init__(self):
+        pass
+
+    def extract_face_features(self, image):
+        pass
