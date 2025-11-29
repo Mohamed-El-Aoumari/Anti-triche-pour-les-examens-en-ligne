@@ -204,7 +204,8 @@ print(features)
 
 '''
 
-# Exemple d'utilisation
+# Le code de test
+
 if __name__ == "__main__":
     
     # Capturer video

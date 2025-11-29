@@ -132,7 +132,7 @@ class HandTrackingExtractor:
         return 0
 
 
-# Exemple d'utilisation
+# Le code de test
 if __name__ == "__main__":
     # Initialisation
     hand_extractor = HandTrackingExtractor()
