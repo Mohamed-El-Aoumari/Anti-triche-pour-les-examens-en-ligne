@@ -130,39 +130,14 @@ class HandTrackingExtractor:
                 return 1
         
         return 0
-    
-    def draw_hand_landmarks(self, image, features):
-        """
-        Dessine les landmarks des mains sur l'image (optionnel)
-        
-        Args:
-            image: Image originale
-            features: Caractéristiques extraites
-            
-        Returns:
-            image: Image avec les landmarks dessinés
-        """
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        results = self.hands.process(image_rgb)
-        
-        if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
-                self.mp_drawing.draw_landmarks(
-                    image, hand_landmarks, self.mp_hands.HAND_CONNECTIONS)
-        
-        return image
-    
-    def __del__(self):
-        """Libère les ressources MediaPipe"""
-        if hasattr(self, 'hands'):
-            self.hands.close()
+
 
 # Exemple d'utilisation
 if __name__ == "__main__":
-    # Initialiser l'extracteur
+    # Initialisation
     hand_extractor = HandTrackingExtractor()
     
-    # Capturer video depuis la caméra
+    # Capturer video
     cap = cv2.VideoCapture(0)
     
     while True:
@@ -183,10 +158,9 @@ if __name__ == "__main__":
         cv2.putText(frame, f"Interaction: {features['hand_obj_interaction']}", 
                    (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         
-        # Dessiner les landmarks
-        frame = hand_extractor.draw_hand_landmarks(frame, features)
-        
         cv2.imshow('Hand Tracking', frame)
+
+        print(features)  # Afficher les caractéristiques dans la console
         
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

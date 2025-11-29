@@ -79,7 +79,7 @@ class EyeGazeExtractor:
         img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         results = self.face_mesh.process(img_rgb)
 
-        # Dictionnaire par défaut (valeurs "nulles")
+        # Dictionnaire par défaut
         output_data = {
             'gaze_on_script': 0,
             'gaze_direction': 'None',
@@ -96,27 +96,26 @@ class EyeGazeExtractor:
                 landmarks = face_landmarks.landmark
                 
                 # Extraction des Pupilles (Coordonnées Pixel) 
-                # Left Pupil (468)
+                # Left Pupil
                 lp = landmarks[self.LEFT_PUPIL_CENTER]
                 px_l, py_l = lp.x * w, lp.y * h
                 output_data['pupil_left_x'] = float(px_l)
                 output_data['pupil_left_y'] = float(py_l)
 
-                # Right Pupil (473)
+                # Right Pupil
                 rp = landmarks[self.RIGHT_PUPIL_CENTER]
                 px_r, py_r = rp.x * w, rp.y * h
                 output_data['pupil_right_x'] = float(px_r)
                 output_data['pupil_right_y'] = float(py_r)
 
                 # Estimation du point de regard (Gaze Point) via solvePnP 
-                # Matrice caméra (approximation)
                 focal_length = w
                 cam_matrix = np.array([
                     [focal_length, 0, w / 2],
                     [0, focal_length, h / 2],
                     [0, 0, 1]
                 ], dtype=np.float64)
-                dist_coeffs = np.zeros((4, 1)) # Pas de distorsion
+                dist_coeffs = np.zeros((4, 1)) 
 
                 # Récupération des points 2D de l'image
                 image_points = []
@@ -192,7 +191,7 @@ class EyeGazeExtractor:
 
 image = cv2.imread('22.jpg') 
 
-h, w, c = image.shape
+h, w = image.shape[:2]
 sx = int(w * 0.20)
 sy = int(h * 0.42)
 sw = int(w * 0.60)
@@ -204,3 +203,46 @@ features = extractor.process_image(image)
 print(features)
 
 '''
+
+# Exemple d'utilisation
+if __name__ == "__main__":
+    
+    # Capturer video
+    cap = cv2.VideoCapture(0)
+
+    # On definit la zone de script
+    h, w = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    sx = int(w * 0.20)
+    sy = int(h * 0.42)
+    sw = int(w * 0.60)
+    sh = int(h * 0.42)
+    script_area = (sx, sy, sw, sh)
+
+    # Initialisation
+    eye_gaze_extractor = EyeGazeExtractor(script_area_rect=script_area)
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        features = eye_gaze_extractor.process_image(frame)
+        
+        # Affichage des caractéristiques sur l'image
+        cv2.putText(frame, f"Gaze on Script: {features['gaze_on_script']}", 
+                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.putText(frame, f"Gaze Direction: {features['gaze_direction']}", 
+                    (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.putText(frame, f"Gaze Point: ({int(features['gazePoint_x'])}, {int(features['gazePoint_y'])})", 
+                    (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        
+        cv2.circle(frame, (int(features['pupil_left_x']), int(features['pupil_left_y'])), 5, (255, 0, 0), -1)
+        cv2.circle(frame, (int(features['pupil_right_x']), int(features['pupil_right_y'])), 5, (0, 0, 255), -1)
+        
+        cv2.imshow('Eye Gaze Tracking', frame)
+        
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    
+    cap.release()
+    cv2.destroyAllWindows()
