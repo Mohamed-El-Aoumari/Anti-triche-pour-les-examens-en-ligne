@@ -29,9 +29,7 @@ import numpy as np
 
 class HeadPositionExtractor:
 
-    
     def __init__(self):
-        # Initialiser MediaPipe Face Mesh
         self.mp_face_mesh = mp.solutions.face_mesh
         self.face_mesh = self.mp_face_mesh.FaceMesh(
             static_image_mode=True,
@@ -41,7 +39,6 @@ class HeadPositionExtractor:
             min_tracking_confidence=0.5
         )
         
-        # Seuils optimisés pour une meilleure détection
         # Angles plus stricts pour une classification plus précise
         self.pitch_down_threshold = 10  # Seuil pour détecter "down"
         self.yaw_left_threshold = 12    # Seuil pour détecter "left"
@@ -150,15 +147,7 @@ class HeadPositionExtractor:
         }
     
     def _rotation_matrix_to_euler_angles(self, R):
-        """
-        Convertit une matrice de rotation en angles d'Euler (pitch, yaw, roll).
-        
-        Args:
-            R: Matrice de rotation 3x3
-            
-        Returns:
-            tuple: (pitch, yaw, roll) en degrés
-        """
+        # Calculer les angles d'Euler à partir de la matrice de rotation
         sy = np.sqrt(R[0, 0] ** 2 + R[1, 0] ** 2)
         
         singular = sy < 1e-6
@@ -180,17 +169,6 @@ class HeadPositionExtractor:
         return pitch, yaw, roll
     
     def _classify_head_pose(self, pitch, yaw):
-        """
-        Classifie la pose de la tête en catégories : 'forward', 'down', 'left', 'right'.
-        Logique améliorée pour une détection plus précise.
-        
-        Args:
-            pitch: Angle de rotation autour de l'axe X (haut/bas)
-            yaw: Angle de rotation autour de l'axe Y (gauche/droite)
-            
-        Returns:
-            str: Catégorie de pose
-        """
         # Stratégie de classification hiérarchique
         
         # 1. Vérifier si la tête regarde vers le bas (pitch positif = vers le bas)
@@ -221,19 +199,42 @@ class HeadPositionExtractor:
                 return 'right'
     
     def _stabilize_angle(self, angle):
-        """
-        Stabilise un angle en arrondissant les petites valeurs.
-        
-        Args:
-            angle: Angle en degrés
-            
-        Returns:
-            float: Angle stabilisé
-        """
         # Arrondir les angles très petits à 0
         if abs(angle) < 2.0:
             return 0.0
         return angle
     
-   
+'''
+# Exemple d'utilisation :
+if __name__ == "__main__":
+    
+    # Capturer video
+    cap = cv2.VideoCapture(0)
+    head_position_extractor = HeadPositionExtractor()
+    
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        features = head_position_extractor.extract_head_position(frame)
 
+        cv2.putText(frame, f"Head Pose: {features['head_pose']}", (10, 30), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        cv2.putText(frame, f"Pitch: {features['head_pitch']:.2f}", (10, 60), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        cv2.putText(frame, f"Roll: {features['head_roll']:.2f}", (10, 90), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        cv2.putText(frame, f"Yaw: {features['head_yaw']:.2f}", (10, 120), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        
+        print(features)
+        
+        cv2.imshow('Head Position Extraction', frame)
+        
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    
+    cap.release()
+    cv2.destroyAllWindows()
+'''
