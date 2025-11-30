@@ -28,11 +28,7 @@ import mediapipe as mp
 import numpy as np
 
 class HeadPositionExtractor:
-    """
-    Extrait la position et l'orientation de la tête à partir d'une image.
-    Utilise MediaPipe Face Mesh pour détecter les points faciaux et calculer
-    les angles de rotation (pitch, yaw, roll).
-    """
+
     
     def __init__(self):
         # Initialiser MediaPipe Face Mesh
@@ -41,23 +37,19 @@ class HeadPositionExtractor:
             static_image_mode=True,
             max_num_faces=1,
             refine_landmarks=True,
-            min_detection_confidence=0.5
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5
         )
         
-        # Définir les seuils pour la classification de la pose
-        self.pitch_threshold = 15  # degrés
-        self.yaw_threshold = 15    # degrés
+        # Seuils optimisés pour une meilleure détection
+        # Angles plus stricts pour une classification plus précise
+        self.pitch_down_threshold = 10  # Seuil pour détecter "down"
+        self.yaw_left_threshold = 12    # Seuil pour détecter "left"
+        self.yaw_right_threshold = 12   # Seuil pour détecter "right"
+        self.forward_tolerance = 8      # Tolérance pour "forward"
     
     def extract_head_position(self, image):
-        """
-        Extrait les caractéristiques de position de la tête depuis une image.
-        
-        Args:
-            image: Image numpy array (BGR format de OpenCV)
-            
-        Returns:
-            dict: Dictionnaire contenant head_pose, head_pitch, head_roll, head_yaw
-        """
+      
         # Convertir BGR vers RGB pour MediaPipe
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         h, w = image.shape[:2]
@@ -75,11 +67,18 @@ class HeadPositionExtractor:
             }
         
         face_landmarks = results.multi_face_landmarks[0]
-        
-        # Extraire les points 3D clés pour calculer l'orientation
-        # Points de référence sur le visage (indices MediaPipe Face Mesh)
+   
         landmarks_points = []
-        indices = [1, 33, 263, 61, 291, 199]  # Nez, œil gauche, œil droit, etc.
+        indices = [
+            1,      # Pointe du nez
+            33,     # Coin externe de l'œil gauche
+            263,    # Coin externe de l'œil droit
+            61,     # Coin interne de l'œil gauche
+            291,    # Coin interne de l'œil droit
+            199,    # Partie inférieure du nez
+            10,     # Front
+            152     # Menton
+        ]
         
         for idx in indices:
             landmark = face_landmarks.landmark[idx]
@@ -87,14 +86,16 @@ class HeadPositionExtractor:
         
         landmarks_points = np.array(landmarks_points, dtype=np.float32)
         
-        # Points 3D du modèle de visage générique
+        # Points 3D du modèle de visage générique (modèle optimisé)
         model_points = np.array([
-            (0.0, 0.0, 0.0),             # Nez
-            (-30.0, -125.0, -30.0),      # Œil gauche
-            (30.0, -125.0, -30.0),       # Œil droit
-            (-20.0, -70.0, -125.0),      # Coin gauche de la bouche
-            (20.0, -70.0, -125.0),       # Coin droit de la bouche
-            (0.0, 0.0, -90.0)            # Menton
+            (0.0, 0.0, 0.0),             # Pointe du nez
+            (-50.0, -70.0, -40.0),       # Coin externe œil gauche
+            (50.0, -70.0, -40.0),        # Coin externe œil droit
+            (-30.0, -70.0, -30.0),       # Coin interne œil gauche
+            (30.0, -70.0, -30.0),        # Coin interne œil droit
+            (0.0, -30.0, -60.0),         # Partie inférieure du nez
+            (0.0, -100.0, -70.0),        # Front
+            (0.0, 30.0, -80.0)           # Menton
         ], dtype=np.float32)
         
         # Paramètres de la caméra (approximation)
@@ -110,12 +111,13 @@ class HeadPositionExtractor:
         dist_coeffs = np.zeros((4, 1))
         
         # Résoudre PnP pour obtenir les vecteurs de rotation et translation
+        # Utilisation de SOLVEPNP_EPNP pour plus de stabilité
         success, rotation_vector, translation_vector = cv2.solvePnP(
             model_points,
             landmarks_points,
             camera_matrix,
             dist_coeffs,
-            flags=cv2.SOLVEPNP_ITERATIVE
+            flags=cv2.SOLVEPNP_EPNP
         )
         
         if not success:
@@ -131,6 +133,11 @@ class HeadPositionExtractor:
         
         # Calculer les angles d'Euler (pitch, yaw, roll)
         pitch, yaw, roll = self._rotation_matrix_to_euler_angles(rotation_matrix)
+        
+        # Appliquer des filtres pour stabiliser les angles
+        pitch = self._stabilize_angle(pitch)
+        yaw = self._stabilize_angle(yaw)
+        roll = self._stabilize_angle(roll)
         
         # Déterminer la pose catégorielle
         head_pose = self._classify_head_pose(pitch, yaw)
@@ -175,6 +182,7 @@ class HeadPositionExtractor:
     def _classify_head_pose(self, pitch, yaw):
         """
         Classifie la pose de la tête en catégories : 'forward', 'down', 'left', 'right'.
+        Logique améliorée pour une détection plus précise.
         
         Args:
             pitch: Angle de rotation autour de l'axe X (haut/bas)
@@ -183,19 +191,49 @@ class HeadPositionExtractor:
         Returns:
             str: Catégorie de pose
         """
-        # Priorité à yaw pour gauche/droite
-        if abs(yaw) > self.yaw_threshold:
-            if yaw > 0:
-                return 'right'
-            else:
-                return 'left'
+        # Stratégie de classification hiérarchique
         
-        # Ensuite pitch pour haut/bas
-        if pitch > self.pitch_threshold:
+        # 1. Vérifier si la tête regarde vers le bas (pitch positif = vers le bas)
+        if pitch > self.pitch_down_threshold:
             return 'down'
         
-        # Par défaut, si angles faibles
-        return 'forward'
+        # 2. Vérifier les rotations gauche/droite (yaw)
+        # yaw négatif = vers la gauche, yaw positif = vers la droite
+        if yaw < -self.yaw_left_threshold:
+            return 'left'
+        elif yaw > self.yaw_right_threshold:
+            return 'right'
+        
+        # 3. Si les angles sont dans la tolérance, c'est "forward"
+        if abs(pitch) <= self.forward_tolerance and abs(yaw) <= self.forward_tolerance:
+            return 'forward'
+        
+        # 4. Cas ambigus : choisir selon l'angle dominant
+        if abs(pitch) > abs(yaw):
+            if pitch > 0:
+                return 'down'
+            else:
+                return 'forward'  # Légèrement vers le haut = forward
+        else:
+            if yaw < 0:
+                return 'left'
+            else:
+                return 'right'
     
-
+    def _stabilize_angle(self, angle):
+        """
+        Stabilise un angle en arrondissant les petites valeurs.
+        
+        Args:
+            angle: Angle en degrés
+            
+        Returns:
+            float: Angle stabilisé
+        """
+        # Arrondir les angles très petits à 0
+        if abs(angle) < 2.0:
+            return 0.0
+        return angle
+    
+   
 
