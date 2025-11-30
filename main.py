@@ -12,6 +12,6 @@ from FeaturesExtraction.Eye_gaze_tracking import EyeGazeExtractor
 #########################################################
 
 
-
+print("Initialisation des extracteurs de features...")
 
 
