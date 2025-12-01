@@ -1,0 +1,6 @@
+opencv-python-headless==4.7.0.72
+numpy==1.26.4
+mediapipe==0.10.7
+ultralytics==8.3.229
+cv2-helpers==0.8.1
+mediapipe-helpers==0.3.4
