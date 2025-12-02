@@ -48,13 +48,13 @@ def features_extraction(image, extractors):
     }
 
     return features
-
+'''
 #Test
 image = cv2.imread("Screenshot_3.png")
 features = features_extraction(image, initialize_extractors(image.shape[1], image.shape[0]))
 print(features)
-
 '''
+
 
 if __name__ == "__main__":
     cap = cv2.VideoCapture(0)
@@ -86,5 +86,3 @@ if __name__ == "__main__":
 
     cap.release()
     cv2.destroyAllWindows()
-
-'''
