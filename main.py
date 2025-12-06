@@ -48,41 +48,56 @@ def features_extraction(image, extractors):
     }
 
     return features
-'''
-#Test
-image = cv2.imread("Screenshot_3.png")
-features = features_extraction(image, initialize_extractors(image.shape[1], image.shape[0]))
-print(features)
-'''
 
+
+'''
+dans cette partie, on va generer des fichier csv a partir des images
+dans le dossier "Images/N/*" N c'est le nom du dossier qui contient les images normales
+pour chaque image on va extraire les features et les stocker dans un fichier csv nommé "0_features.csv"
+dans le dossier "Images/T/*" T c'est le nom du dossier qui contient les images de triche
+pour chaque image on va extraire les features et les stocker dans un fichier csv nommé "1_features.csv"
+'''
 
 if __name__ == "__main__":
-    cap = cv2.VideoCapture(0)
+    import os
+    import pandas as pd
 
-    ret, first_frame = cap.read()
-    h, w = first_frame.shape[:2]
-    extractors_dict = initialize_extractors(w, h)
+    image_dirs = {
+        0: "Images/N/",
+        1: "Images/T/"
+    }
 
-    # Calcul de FPS
-    prev_time = 0
+    for label, dir_path in image_dirs.items():
+        all_features = []
+        image_files = [f for f in os.listdir(dir_path) if f.endswith(('.png', '.jpg', '.jpeg'))]
+        
+        if not image_files:
+            print(f"{dir_path} est vide.")
+            continue
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-        # On passe le dictionnaire d'extracteurs déjà chargés
-        features = features_extraction(frame, extractors_dict)
-        print(features)
+        # Initialisation des extracteurs avec la taille de la première image
+        sample_image = cv2.imread(os.path.join(dir_path, image_files[0]))
+        height, width, _ = sample_image.shape
+        extractors = initialize_extractors(width, height)
 
-        # Calcul FPS et affichage
-        curr_time = time.time()
-        fps = 1 / (curr_time - prev_time)
-        prev_time = curr_time
-        cv2.putText(frame, f"FPS: {int(fps)}", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        for image_file in image_files:
+            image_path = os.path.join(dir_path, image_file)
+            image = cv2.imread(image_path)
 
-        cv2.imshow("Webcam", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+            if image is None:
+                print(f"Erreur de chargement de l'image {image_path}.")
+                continue
 
-    cap.release()
-    cv2.destroyAllWindows()
+            features = features_extraction(image, extractors)
+            features['image_file'] = image_file
+            features['label'] = label
+            all_features.append(features)
+
+        # Save features to CSV dans le dossier Data_CSV
+        df = pd.DataFrame(all_features)
+        if not os.path.exists("Data_CSV"):
+            os.makedirs("Data_CSV")
+        csv_filename = f"{label}_features.csv"
+        csv_path = os.path.join("Data_CSV", csv_filename)
+        df.to_csv(csv_path, index=False)
+        print(f"Saved features for {label} images to {csv_path}")
