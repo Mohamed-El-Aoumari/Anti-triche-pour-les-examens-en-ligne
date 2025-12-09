@@ -10,6 +10,7 @@ from FeaturesExtraction.Eye_gaze_tracking import EyeGazeExtractor
 ## Ici, on va developper le code qui fait l'extraction ##
 ## des différentes features en utilisant les modules   ##
 ##    définis dans le dossier FeaturesExtraction       ##
+##                                                     ##
 #########################################################
 
 
@@ -97,7 +98,7 @@ if __name__ == "__main__":
         df = pd.DataFrame(all_features)
         if not os.path.exists("Data_CSV"):
             os.makedirs("Data_CSV")
-        csv_filename = f"{label}_features.csv"
+        csv_filename = f"saad_{label}_features.csv"
         csv_path = os.path.join("Data_CSV", csv_filename)
         df.to_csv(csv_path, index=False)
         print(f"Saved features for {label} images to {csv_path}")
