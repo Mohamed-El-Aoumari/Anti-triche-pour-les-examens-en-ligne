@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5 text-center">
+    <div class="col-md-6">
+        <div class="card p-5">
+            <h1 class="mb-4">Bienvenue, {{ session.get('username') }}</h1>
+            <p>Veuillez entrer le code fourni par votre surveillant pour commencer l'examen.</p>
+            
+            <form action="{{ url_for('join_exam') }}" method="POST" class="d-flex gap-2">
+                <input type="text" name="code" class="form-control form-control-lg" placeholder="CODE EXAMEN" required>
+                <button type="submit" class="btn btn-lg btn-success">COMMENCER</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

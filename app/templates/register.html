@@ -4,7 +4,7 @@
 <div class="row justify-content-center mt-5">
     <div class="col-md-5">
         <div class="card p-4">
-            <h3 class="text-center mb-4">Connexion</h3>
+            <h3 class="text-center mb-4">Créer un compte</h3>
             <form method="POST">
                 <div class="mb-3">
                     <label>Nom d'utilisateur</label>
@@ -14,10 +14,17 @@
                     <label>Mot de passe</label>
                     <input type="password" name="password" class="form-control" required>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Se connecter</button>
+                <div class="mb-3">
+                    <label>Rôle</label>
+                    <select name="role" class="form-select">
+                        <option value="candidate">Candidat (Étudiant)</option>
+                        <option value="admin">Administrateur (Prof)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success w-100">S'inscrire</button>
             </form>
             <div class="mt-3 text-center">
-                <a href="{{ url_for('register') }}">Pas de compte ? S'inscrire</a>
+                <a href="{{ url_for('login') }}">Déjà inscrit ? Se connecter</a>
             </div>
         </div>
     </div>

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Tableau de Bord Administrateur</h1>
+    <a href="{{ url_for('create_exam') }}" class="btn btn-primary">+ Nouvel Examen</a>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card p-3 mb-3">
+            <h4>Mes Examens</h4>
+            <ul class="list-group list-group-flush">
+                {% for exam in exams %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ exam.title }}
+                        <span class="badge bg-secondary">{{ exam.code }}</span>
+                    </li>
+                {% else %}
+                    <li class="list-group-item text-muted">Aucun examen créé.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card p-3">
+            <h4>Sessions Étudiants & Surveillance</h4>
+            <table class="table table-hover mt-2">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Candidat</th>
+                        <th>Examen</th>
+                        <th>Suspicion Globale</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in sessions %}
+                    <tr>
+                        <td>{{ s.start_time.strftime('%d/%m %H:%M') }}</td>
+                        <td>{{ s.candidate.username }}</td>
+                        <td>{{ s.exam.title }}</td>
+                        <td>
+                            {% if s.cheat_probability > 50 %}
+                                <span class="badge bg-danger">{{ s.cheat_probability|round(1) }}%</span>
+                            {% elif s.cheat_probability > 20 %}
+                                <span class="badge bg-warning text-dark">{{ s.cheat_probability|round(1) }}%</span>
+                            {% else %}
+                                <span class="badge bg-success">{{ s.cheat_probability|round(1) }}%</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('session_details', session_id=s.id) }}" class="btn btn-sm btn-info text-white">Détails</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

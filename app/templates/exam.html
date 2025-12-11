@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Examen en Cours</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="exam-mode">
+
+<div class="exam-container">
+    
+    <div class="subject-area">
+        <div class="d-flex justify-content-between">
+            <h2>{{ exam.title }}</h2>
+            <span class="badge bg-primary">Session ID: {{ exam_session.id }}</span>
+        </div>
+        <hr>
+        <p class="text-muted">Répondez aux questions ci-dessous. Votre comportement est analysé en temps réel.</p>
+        
+        <div class="mb-4">
+            <h5>Question 1</h5>
+            <p>Expliquez le principe du Random Forest dans le contexte de la détection de fraude.</p>
+            <textarea class="form-control" rows="4"></textarea>
+        </div>
+
+        <div class="mb-4">
+            <h5>Question 2</h5>
+            <p>Quelle est la différence entre la détection d'objet (YOLO) et l'estimation de pose (MediaPipe) ?</p>
+            <textarea class="form-control" rows="4"></textarea>
+        </div>
+
+        <button class="btn btn-success btn-lg w-100 mt-4">TERMINER L'EXAMEN</button>
+    </div>
+
+    <div class="camera-area">
+        <h4 class="mb-3">🔴 Surveillance Active</h4>
+        
+        <img src="{{ url_for('video_feed', session_id=exam_session.id) }}" class="camera-feed">
+        
+        <div class="warning-box text-center">
+            <strong>ATTENTION</strong><br>
+            Gardez votre visage dans le cadre.<br>
+            Ne regardez pas autour de vous.<br>
+            Pas de téléphone.
+        </div>
+        
+        <div class="mt-4">
+            <a href="{{ url_for('student_home') }}" class="btn btn-outline-light btn-sm">Quitter (Urgence)</a>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

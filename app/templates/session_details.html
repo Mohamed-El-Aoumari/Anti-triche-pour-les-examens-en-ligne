@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">&larr; Retour</a>
+</div>
+
+<div class="card p-4">
+    <h2>Rapport de Session #{{ exam_session.id }}</h2>
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <p><strong>Candidat :</strong> {{ exam_session.candidate.username }}</p>
+            <p><strong>Examen :</strong> {{ exam_session.exam.title }}</p>
+        </div>
+        <div class="col-md-6">
+            <p><strong>Début :</strong> {{ exam_session.start_time }}</p>
+            <p><strong>Score de Suspicion Final :</strong> <span class="h4 text-danger">{{ exam_session.cheat_probability }}%</span></p>
+        </div>
+    </div>
+
+    <hr>
+    <h4>Alertes Détectées par l'IA</h4>
+    
+    {% if alerts %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Heure Début</th>
+                    <th>Heure Fin</th>
+                    <th>Score de l'incident</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alert in alerts %}
+                <tr>
+                    <td>{{ alert.start_time.strftime('%H:%M:%S') }}</td>
+                    <td>{{ alert.end_time.strftime('%H:%M:%S') if alert.end_time else 'En cours' }}</td>
+                    <td>{{ (alert.avg_cheat_rate * 100)|round(1) }}%</td>
+                    <td>{{ alert.description or "Comportement suspect (Modèle RF)" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-success">Aucune alerte majeure détectée durant cette session.</div>
+    {% endif %}
+</div>
+{% endblock %}
