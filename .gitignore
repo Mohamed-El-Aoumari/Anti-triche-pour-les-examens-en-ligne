@@ -2,3 +2,13 @@ Data/*
 Images/*
 Data_CSV/*
 notebook/Data/*
+notebook/model_columns.pkl
+notebook/rf_model.pkl
+notebook/Students suspicious behaviors detection dataset_V1.csv
+notebook/Data
+app/yolov8n.pt
+app/anticheat.db
+app/.env
+app/models
+app/instance
+app/__pycache__
