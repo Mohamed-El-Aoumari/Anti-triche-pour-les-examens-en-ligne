@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h3>Créer un Examen</h3>
+            <form method="POST">
+                <div class="mb-3">
+                    <label>Titre de l'examen</label>
+                    <input type="text" name="title" class="form-control" placeholder="Ex: Mathématiques Final" required>
+                </div>
+                <div class="mb-3">
+                    <label>Code d'accès secret</label>
+                    <input type="text" name="code" class="form-control" placeholder="Ex: MATH2025" required>
+                    <small class="text-muted">Donnez ce code aux étudiants.</small>
+                </div>
+                <button type="submit" class="btn btn-primary">Créer</button>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Annuler</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
