@@ -23,7 +23,7 @@ def train_gmm(audio_reference_path, n_components=4):
 # -----------------------------
 # 3. Tester si un autre audio provient de la même personne
 # -----------------------------
-def is_same_speaker(gmm_model, test_audio_path, threshold=-200):
+def is_same_speaker(gmm_model, test_audio_path, threshold=-80):
     mfcc_test = extract_mfcc(test_audio_path)
     score = gmm_model.score(mfcc_test)  # log-likelihood moyenne
 
@@ -37,8 +37,8 @@ def is_same_speaker(gmm_model, test_audio_path, threshold=-200):
 # -----------------------------
 # 4. Exemple d'utilisation
 # -----------------------------
-ref_audio = "audio2.wav"        # audio de la personne principale
-test_audio = "audio1.wav"            # audio à tester
+test_audio = r"data-wav\audio2.wav"        # audio de la personne principale
+ref_audio = r"data-wav\audio_omari.wav"            # audio à tester
 
 print("📢 Entraînement du modèle GMM...")
 gmm = train_gmm(ref_audio)
