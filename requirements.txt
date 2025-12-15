@@ -3,3 +3,11 @@ numpy==1.26.4
 mediapipe==0.10.7
 ultralytics==8.3.229
 flask==3.1.2
+xgboost==3.1.2
+SQLAlchemy==2.0.45
+scikit-learn==1.7.2
+python-dotenv==1.2.1
+pandas==2.3.3
+matplotlib==3.10.7
+joblib==1.5.2
+Jinja2==3.1.6
