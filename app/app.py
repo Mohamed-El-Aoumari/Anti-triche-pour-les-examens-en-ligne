@@ -1,11 +1,12 @@
-from flask import Flask, render_template, Response, request, redirect, url_for, session, flash
+from flask import Flask, render_template, Response, request, jsonify, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
-# Import de la configuration et des modèles
 from config import Config
 from models import db, User, Exam, ExamSession, CheatAlertSegment
 from camera import VideoCamera
+
+active_processors = {}
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -13,15 +14,6 @@ db.init_app(app)
 
 with app.app_context():
     db.create_all()
-
-# --- FONCTION GÉNÉRATEUR POUR LE STREAMING ---
-def gen(camera):
-    while True:
-        frame = camera.get_frame()
-        if frame:
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
-
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -32,7 +24,6 @@ def login():
         user = User.query.filter_by(username=username).first()
         
         if user and check_password_hash(user.password, password):
-            # Stockage des infos dans la session navigateur
             session['user_id'] = user.id
             session['role'] = user.role
             session['username'] = user.username
@@ -53,7 +44,6 @@ def register():
         password = request.form['password']
         role = request.form['role'] 
         
-        # Hachage du mot de passe pour la sécurité
         hashed_pw = generate_password_hash(password)
         
         new_user = User(username=username, password=hashed_pw, role=role)
@@ -72,14 +62,13 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-
 @app.route('/dashboard')
 def dashboard():
     if session.get('role') != 'admin':
         return redirect(url_for('login'))
-    
-    exams = Exam.query.all()
-    sessions = ExamSession.query.all()
+    current_user_id = session['user_id']
+    exams = Exam.query.filter_by(created_by=current_user_id).all()
+    sessions = ExamSession.query.join(Exam).filter(Exam.created_by == current_user_id).all()
     
     return render_template('dashboard.html', exams=exams, sessions=sessions)
 
@@ -91,12 +80,25 @@ def create_exam():
     if request.method == 'POST':
         title = request.form['title']
         code = request.form['code']
+
+        existing_exam = Exam.query.filter_by(code=code).first()
+        
+        if existing_exam:
+            flash("Ce code d'examen est déjà utilisé ! Veuillez en choisir un autre.", "danger")
+            return redirect(url_for('create_exam'))
+            
         
         new_exam = Exam(title=title, code=code, created_by=session['user_id'])
-        db.session.add(new_exam)
-        db.session.commit()
-        flash('Examen créé avec succès !', 'success')
-        return redirect(url_for('dashboard'))
+        
+        try:
+            db.session.add(new_exam)
+            db.session.commit()
+            flash('Examen créé avec succès !', 'success')
+            return redirect(url_for('dashboard'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Erreur inattendue : {str(e)}", "danger")
+            return redirect(url_for('create_exam'))
         
     return render_template('create_exam.html')
 
@@ -109,8 +111,6 @@ def session_details(session_id):
     alerts = CheatAlertSegment.query.filter_by(session_id=session_id).all()
     
     return render_template('session_details.html', exam_session=exam_session, alerts=alerts)
-
-
 
 @app.route('/student')
 def student_home():
@@ -141,15 +141,35 @@ def join_exam():
 def take_exam(session_id):
     if session.get('role') != 'candidate':
         return redirect(url_for('login'))
-        
+    
+    # On prépare le processeur vidéo en mémoire
+    if session_id not in active_processors:
+        active_processors[session_id] = VideoCamera(app, session_id)
+    
     current_session = ExamSession.query.get_or_404(session_id)
     return render_template('exam.html', exam_session=current_session, exam=current_session.exam)
 
-@app.route('/video_feed/<int:session_id>')
-def video_feed(session_id):
-    return Response(gen(VideoCamera(app, session_id)),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+# --- CORRECTION DE LA ROUTE API ---
+@app.route('/process_frame', methods=['POST'])
+def process_frame():
+    data = request.get_json()
+    session_id = data.get('session_id')
+    image_base64 = data.get('image') 
+    
+    if not session_id or not image_base64:
+        return jsonify({'status': 'error', 'msg': 'Missing data'}), 400
 
+    if session_id in active_processors:
+        processor = active_processors[session_id]
+        result = processor.process_frame(image_base64) 
+        return jsonify(result)
+    else:
+        try:
+            active_processors[session_id] = VideoCamera(app, session_id)
+            result = active_processors[session_id].process_frame(image_base64)
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'status': 'error', 'msg': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
